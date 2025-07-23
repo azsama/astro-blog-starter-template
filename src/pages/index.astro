@@ -1,73 +1,16 @@
-/**
- * index.astro
- * 从 Cloudflare Workers 暴露的 quote.json 拉取 A 股实时行情并渲染为表格。
- * 将本文件放在 src/pages/ 下即可覆盖原来的首页。
- * 若项目启用了 TailwindCSS，会自动应用下面 class 的样式。
- */
-
-const API_URL = 'https://astro-blog-starter-template.anzisama2435.workers.dev/quote.json';
+---
+import {SITE_TITLE, SITE_DESCRIPTION} from '../consts';
+const API_URL = 'https://ms1.wangxiansen.top/api/realtime/quotec?symbol=SZ300757';
 
 // 每一次请求都强制抓最新数据，避免 Vercel/CF Edge 缓存
-const response = await fetch(API_URL, { cache: 'no-store' });
-const quotes = await response.json();
+const response = await fetch(API_URL, {cache: 'no-store'});
+const resp = await response.json() as any;
+const stock = JSON.stringify(resp, null, 2)
 ---
 
 <html lang="zh-CN">
-  <head>
-    <meta charset="UTF-8" />
-    <title>实时行情</title>
-  </head>
-  <body class="p-6 font-sans">
-    <h1 class="text-2xl font-bold mb-4">实时行情（Cloudflare Workers → Astro）</h1>
-
-    <table class="min-w-full border-collapse text-sm">
-      <thead>
-        <tr>
-          <th class="border px-2 py-1">代码</th>
-          <th class="border px-2 py-1">名称</th>
-          <th class="border px-2 py-1 text-right">最新价</th>
-          <th class="border px-2 py-1 text-right">涨跌幅</th>
-        </tr>
-      </thead>
-      <tbody>
-        {quotes.map((stock) => (
-          <tr>
-            <td class="border px-2 py-1">{stock.symbol}</td>
-            <td class="border px-2 py-1">{stock.name}</td>
-            <td class="border px-2 py-1 text-right">{stock.price}</td>
-            <td
-              class={`border px-2 py-1 text-right ${
-                stock.change >= 0 ? 'text-green-600' : 'text-red-600'
-              }`}
-            >
-              {stock.change}%
-            </td>
-          </tr>
-        ))}
-      </tbody>
-    </table>
-
-    <script>
-      // 简易客户端轮询：每 10 秒刷新一次价格
-      const API_URL = 'https://astro-blog-starter-template.anzisama2435.workers.dev/quote.json';
-      async function refresh() {
-        try {
-          const resp = await fetch(API_URL);
-          const newData = await resp.json();
-          document.querySelectorAll('tbody tr').forEach((tr, idx) => {
-            const priceCell = tr.children[2];
-            const changeCell = tr.children[3];
-            priceCell.textContent = newData[idx].price;
-            changeCell.textContent = newData[idx].change + '%';
-            changeCell.className =
-              'border px-2 py-1 text-right ' +
-              (newData[idx].change >= 0 ? 'text-green-600' : 'text-red-600');
-          });
-        } catch (e) {
-          console.error('刷新失败', e);
-        }
-      }
-      setInterval(refresh, 10000);
-    </script>
-  </body>
+<head>
+  <meta charset="utf-8" />
+</head>
+<pre set:html={stock}></pre>
 </html>
